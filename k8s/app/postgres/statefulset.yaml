@@ -18,7 +18,13 @@ spec:
         app: postgres
     
     spec:
-      containers:
+      serviceAccountName: postgres-sa
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:        
         - name: postgres
           image: postgres:16
 
@@ -41,6 +47,24 @@ spec:
                 - postgres
                 - -d
                 - devopsdb
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - postgres
+                - -d
+                - devopsdb
+
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
 
           env:
             - name: POSTGRES_DB
